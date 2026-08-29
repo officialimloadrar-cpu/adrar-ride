@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../services/supabase";
 import { calculateRide, createDebt, prixLight, type RideInput } from "../services/pricingEngine";
+import { SERVICE_COLORS } from "../theme/colors";
+import { SERVICES } from "../theme/services.config";
 
 type OrderStatus = "pending" | "accepted";
 
@@ -29,12 +31,6 @@ interface ColisOrder {
 interface Props {
   driverId: string;
 }
-
-const SERVICE_COLORS = {
-  corsa: "#10B981",
-  colis: "#FF5B00",
-  bg: "#FFF8F0",
-} as const;
 
 function usePendingOrders() {
   const [corsas, setCorsas] = useState<CorsaOrder[]>([]);
@@ -108,12 +104,12 @@ export default function DriverDualMode({ driverId }: Props) {
     const pricing = calculateRide({ distance: order.distance, type: order.type, seats: order.seats } as RideInput);
     const isAccepting = acceptingId === order.id;
     return (
-      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICE_COLORS.corsa}30` }}>
+      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICES.corsa.color}30` }}>
         <div>
           <p className="font-semibold text-zinc-900">{order.origin} → {order.dest}</p>
           <p className="text-xs text-zinc-500">{order.distance}km • {order.seats} seats • {pricing.finalPrice} DZD</p>
         </div>
-        <button disabled={isAccepting} onClick={() => handleAcceptCorsa(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICE_COLORS.corsa }}>
+        <button disabled={isAccepting} onClick={() => handleAcceptCorsa(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICES.corsa.color }}>
           {isAccepting? "..." : "Accept"}
         </button>
       </div>
@@ -123,12 +119,12 @@ export default function DriverDualMode({ driverId }: Props) {
   const renderedColis = useMemo(() => colis.map((order) => {
     const isAccepting = acceptingId === order.id;
     return (
-      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICE_COLORS.colis}30` }}>
+      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICES.colis.color}30` }}>
         <div>
           <p className="font-semibold text-zinc-900">{order.origin} → {order.dest}</p>
           <p className="text-xs text-zinc-500">{order.weight}kg • {order.total} DZD</p>
         </div>
-        <button disabled={isAccepting} onClick={() => handleAcceptColis(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICE_COLORS.colis }}>
+        <button disabled={isAccepting} onClick={() => handleAcceptColis(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICES.colis.color }}>
           {isAccepting? "..." : "Accept"}
         </button>
       </div>
@@ -142,11 +138,11 @@ export default function DriverDualMode({ driverId }: Props) {
     <div className="min-h-screen p-6" style={{ backgroundColor: SERVICE_COLORS.bg }}>
       <div className="grid gap-8 md:grid-cols-2">
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICE_COLORS.corsa }} />تنقلات ({corsas.length})</h2>
+          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICES.corsa.color }} />Corsa ({corsas.length})</h2>
           {corsas.length === 0? <p className="text-zinc-400">No pending orders</p> : renderedCorsas}
         </section>
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICE_COLORS.colis }} />كولي ({colis.length})</h2>
+          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICES.colis.color }} />Colis ({colis.length})</h2>
           {colis.length === 0? <p className="text-zinc-400">No pending orders</p> : renderedColis}
         </section>
       </div>
