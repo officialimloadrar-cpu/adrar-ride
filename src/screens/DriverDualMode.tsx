@@ -30,6 +30,12 @@ interface Props {
   driverId: string;
 }
 
+const SERVICE_COLORS = {
+  corsa: "#10B981",
+  colis: "#FF5B00",
+  bg: "#FFF8F0",
+} as const;
+
 function usePendingOrders() {
   const [corsas, setCorsas] = useState<CorsaOrder[]>([]);
   const [colis, setColis] = useState<ColisOrder[]>([]);
@@ -40,15 +46,12 @@ function usePendingOrders() {
     try {
       setIsLoading(true);
       setError(null);
-
       const [corsaRes, colisRes] = await Promise.all([
         supabase.from("corsa_orders").select("*").eq("status", "pending").limit(20),
         supabase.from("colis_orders").select("*").eq("status", "pending").limit(20),
       ]);
-
       if (corsaRes.error) throw corsaRes.error;
       if (colisRes.error) throw colisRes.error;
-
       setCorsas(corsaRes.data as CorsaOrder[]);
       setColis(colisRes.data as ColisOrder[]);
     } catch (err: any) {
@@ -73,24 +76,12 @@ export default function DriverDualMode({ driverId }: Props) {
     try {
       setAcceptingId(order.id);
       const pricing = calculateRide({ distance: order.distance, type: order.type, seats: order.seats } as RideInput);
-
-      const { error: updateError } = await supabase
-       .from("corsa_orders")
-       .update({ status: "accepted", driver_id: driverId })
-       .eq("id", order.id);
-
+      const { error: updateError } = await supabase.from("corsa_orders").update({ status: "accepted", driver_id: driverId }).eq("id", order.id);
       if (updateError) throw updateError;
-
       await Promise.all([
         supabase.from("driver_debts").insert(createDebt(driverId, order.id, pricing)),
-        supabase.from("trips").insert({
-          driver_id: driverId,
-          corsa_id: order.id,
-          total_price: pricing.finalPrice,
-          status: "accepted",
-        }),
+        supabase.from("trips").insert({ driver_id: driverId, corsa_id: order.id, total_price: pricing.finalPrice, status: "accepted" }),
       ]);
-
       await refresh();
     } finally {
       setAcceptingId(null);
@@ -101,24 +92,12 @@ export default function DriverDualMode({ driverId }: Props) {
     try {
       setAcceptingId(order.id);
       const pricing = prixLight(order.weight, order.dim, order.distance, order.vehicle);
-
-      const { error: updateError } = await supabase
-       .from("colis_orders")
-       .update({ status: "accepted", driver_id: driverId })
-       .eq("id", order.id);
-
+      const { error: updateError } = await supabase.from("colis_orders").update({ status: "accepted", driver_id: driverId }).eq("id", order.id);
       if (updateError) throw updateError;
-
       await Promise.all([
         supabase.from("driver_debts").insert(createDebt(driverId, order.id, pricing)),
-        supabase.from("trips").insert({
-          driver_id: driverId,
-          colis_id: order.id,
-          total_price: pricing.total,
-          status: "accepted",
-        }),
+        supabase.from("trips").insert({ driver_id: driverId, colis_id: order.id, total_price: pricing.total, status: "accepted" }),
       ]);
-
       await refresh();
     } finally {
       setAcceptingId(null);
@@ -128,18 +107,13 @@ export default function DriverDualMode({ driverId }: Props) {
   const renderedCorsas = useMemo(() => corsas.map((order) => {
     const pricing = calculateRide({ distance: order.distance, type: order.type, seats: order.seats } as RideInput);
     const isAccepting = acceptingId === order.id;
-
     return (
-      <div key={order.id} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICE_COLORS.corsa}30` }}>
         <div>
-          <p className="font-medium">{order.origin} → {order.dest}</p>
-          <p className="text-xs text-zinc-400">{order.distance}km • {order.seats} seats • {pricing.finalPrice} DZD</p>
+          <p className="font-semibold text-zinc-900">{order.origin} → {order.dest}</p>
+          <p className="text-xs text-zinc-500">{order.distance}km • {order.seats} seats • {pricing.finalPrice} DZD</p>
         </div>
-        <button
-          disabled={isAccepting}
-          onClick={() => handleAcceptCorsa(order)}
-          className="rounded bg-white px-4 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
-        >
+        <button disabled={isAccepting} onClick={() => handleAcceptCorsa(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICE_COLORS.corsa }}>
           {isAccepting? "..." : "Accept"}
         </button>
       </div>
@@ -149,16 +123,12 @@ export default function DriverDualMode({ driverId }: Props) {
   const renderedColis = useMemo(() => colis.map((order) => {
     const isAccepting = acceptingId === order.id;
     return (
-      <div key={order.id} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+      <div key={order.id} className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: `${SERVICE_COLORS.colis}30` }}>
         <div>
-          <p className="font-medium">{order.origin} → {order.dest}</p>
-          <p className="text-xs text-zinc-400">{order.weight}kg • {order.total} DZD</p>
+          <p className="font-semibold text-zinc-900">{order.origin} → {order.dest}</p>
+          <p className="text-xs text-zinc-500">{order.weight}kg • {order.total} DZD</p>
         </div>
-        <button
-          disabled={isAccepting}
-          onClick={() => handleAcceptColis(order)}
-          className="rounded bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
-        >
+        <button disabled={isAccepting} onClick={() => handleAcceptColis(order)} className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICE_COLORS.colis }}>
           {isAccepting? "..." : "Accept"}
         </button>
       </div>
@@ -169,16 +139,15 @@ export default function DriverDualMode({ driverId }: Props) {
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-black p-6 text-white">
+    <div className="min-h-screen p-6" style={{ backgroundColor: SERVICE_COLORS.bg }}>
       <div className="grid gap-8 md:grid-cols-2">
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Pending Corsa ({corsas.length})</h2>
-          {corsas.length === 0? <p className="text-zinc-500">No pending orders</p> : renderedCorsas}
+          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICE_COLORS.corsa }} />تنقلات ({corsas.length})</h2>
+          {corsas.length === 0? <p className="text-zinc-400">No pending orders</p> : renderedCorsas}
         </section>
-
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Pending Colis ({colis.length})</h2>
-          {colis.length === 0? <p className="text-zinc-500">No pending orders</p> : renderedColis}
+          <h2 className="flex items-center gap-2 text-lg font-bold text-zinc-900"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: SERVICE_COLORS.colis }} />كولي ({colis.length})</h2>
+          {colis.length === 0? <p className="text-zinc-400">No pending orders</p> : renderedColis}
         </section>
       </div>
     </div>
