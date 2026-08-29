@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { calculateRide, freezeQuote } from "./services/pricingEngine";
 import type { RideQuote, RideType, Seats } from "./services/pricingEngine";
-import DriverColis from "./screens/DriverColis";
+import DriverDualMode from "./screens/DriverDualMode";
 
 type Step = "quote" | "review" | "searching";
 
@@ -64,7 +64,7 @@ export default function App() {
       <div className="app">
         <div className="shell">
           <button type="button" className="btn ghost" onClick={() => setIsDriver(false)}>← Client</button>
-          <DriverColis driverId="driver_001" />
+          <DriverDualMode driverId="driver_001" />
         </div>
       </div>
     );
