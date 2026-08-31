@@ -1,48 +1,37 @@
-import { useMemo, useState } from "react";
-import { supabase } from "../services/supabase";
-import { calculateRide, type RideInput } from "../services/pricingEngine";
-import { SERVICES } from "../theme/services.config";
-import { SERVICE_COLORS } from "../theme/colors";
 
-export default function ClientRequestCorsa({ clientId, onCreated }: { clientId: string; onCreated: () => void }) {
-  const [origin, setOrigin] = useState("");
-  const [dest, setDest] = useState("");
-  const [distance, setDistance] = useState(5);
-  const [seats, setSeats] = useState<1 | 2 | 3 | 4>(1);
-  const [type, setType] = useState<"private" | "collective">("private");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const pricing = useMemo(() => calculateRide({ distance, type, seats } as RideInput), [distance, type, seats]);
-
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    await supabase.from("corsa_orders").insert({ client_id: clientId, origin, dest, distance, seats, type, total: pricing.finalPrice, status: "pending" });
-    setIsLoading(false);
-    onCreated();
-  };
-
-  return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: SERVICE_COLORS.bg }}>
-      <div className="mx-auto max-w-md space-y-4 rounded- bg-white p-6 shadow-sm">
-        <input value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="Origin" className="w-full rounded-xl bg-zinc-50 px-4 py-3 text-sm outline-none" />
-        <input value={dest} onChange={(e) => setDest(e.target.value)} placeholder="Destination" className="w-full rounded-xl bg-zinc-50 px-4 py-3 text-sm outline-none" />
-        <div className="flex items-center gap-3">
-          <input type="range" min={1} max={100} value={distance} onChange={(e) => setDistance(Number(e.target.value))} className="flex-1" />
-          <span className="text-sm">{distance} km</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <select value={seats} onChange={(e) => setSeats(Number(e.target.value) as 1 | 2 | 3 | 4)} className="rounded-xl bg-zinc-50 px-3 py-3 text-sm outline-none">
-            <option value={1}>1 seat</option><option value={2}>2 seats</option><option value={3}>3 seats</option><option value={4}>4 seats</option>
-          </select>
-          <select value={type} onChange={(e) => setType(e.target.value as "private" | "collective")} className="rounded-xl bg-zinc-50 px-3 py-3 text-sm outline-none">
-            <option value="private">Private</option><option value="collective">Collective</option>
-          </select>
-        </div>
-        <div className="flex justify-between text-sm font-bold"><span>Total</span><span>{pricing.finalPrice} DZD</span></div>
-        <button disabled={isLoading ||!origin ||!dest} onClick={handleSubmit} className="w-full rounded-xl py-3 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: SERVICES.corsa.color }}>
-          {isLoading? "..." : "Request Corsa"}
-        </button>
+import { useState, useMemo } from 'react'
+import { calculateRide, TripMode, DayPeriod } from '@/services/pricingEngine'
+import PriceCard from '@/components/PriceCard'
+import { createOrder } from '@/services/orders'
+import { haversine } from '@/services/geocoding'
+export default function RequestRide(){
+  const [mode,setMode]=useState<TripMode>('standard')
+  const [distance,setDistance]=useState(5)
+  const [seats,setSeats]=useState(1)
+  const [weight,setWeight]=useState(0)
+  const [period,setPeriod]=useState<DayPeriod>('day')
+  const [from,setFrom]=useState({lat:27.87,lng:-0.28})
+  const [to,setTo]=useState({lat:27.92,lng:-0.32})
+  const autoDist=useMemo(()=>haversine(from,to),[from,to])
+  const input={ distanceKm: distance || autoDist, mode, seats, weightKg:weight, period }
+  const quote=useMemo(()=>calculateRide(input),[distance,autoDist,mode,seats,weight,period])
+  const [loading,setLoading]=useState(false)
+  const submit=async()=>{ setLoading(true); try{ await createOrder({ type:'transport', mode, distance_km:quote.distanceKm, seats, price:quote.total, status:'pending', meta:{from,to} }); alert(`Order created ${quote.total} ${quote.currency}`) }catch(e:any){ alert(e.message) }finally{ setLoading(false)} }
+  return <div className="grid grid-2">
+    <div className="card" style={{padding:20}}>
+      <h2 style={{margin:'0 0 16px'}}>Ride Request</h2>
+      <div className="grid">
+        <div style={{display:'flex',gap:8}}>{(['standard','comfort'] as TripMode[]).map(m=><button key={m} className={mode===m?'btn':'btn btn-ghost'} onClick={()=>setMode(m)}>{m}</button>)}</div>
+        <label>Distance km<input className="input" type="number" value={distance} onChange={e=>setDistance(Number(e.target.value))} /></label>
+        <div style={{display:'flex',gap:8}}><input className="input" placeholder="from lat" type="number" step="0.0001" value={from.lat} onChange={e=>setFrom({...from,lat:Number(e.target.value)})}/><input className="input" placeholder="from lng" type="number" step="0.0001" value={from.lng} onChange={e=>setFrom({...from,lng:Number(e.target.value)})}/></div>
+        <div style={{display:'flex',gap:8}}><input className="input" placeholder="to lat" type="number" step="0.0001" value={to.lat} onChange={e=>setTo({...to,lat:Number(e.target.value)})}/><input className="input" placeholder="to lng" type="number" step="0.0001" value={to.lng} onChange={e=>setTo({...to,lng:Number(e.target.value)})}/></div>
+        <div style={{fontSize:12,color:'#6b7280'}}>Auto haversine: {autoDist.toFixed(2)} km</div>
+        <label>Seats<input className="input" type="number" min={1} max={6} value={seats} onChange={e=>setSeats(Number(e.target.value))}/></label>
+        <label>Weight kg (parcel)<input className="input" type="number" value={weight} onChange={e=>setWeight(Number(e.target.value))}/></label>
+        <div style={{display:'flex',gap:8}}><button className={period==='day'?'btn':'btn btn-ghost'} onClick={()=>setPeriod('day')}>Day</button><button className={period==='night'?'btn':'btn btn-ghost'} onClick={()=>setPeriod('night')}>Night +20%</button></div>
+        <button className="btn btn-lg" onClick={submit} disabled={loading}>{loading?'Sending...':'Confirm Ride'}</button>
       </div>
     </div>
-  );
+    <div className="grid"><PriceCard q={quote}/><div className="card" style={{padding:16}}><div className="map">Live Route - {quote.distanceKm.toFixed(1)} km</div></div></div>
+  </div>
 }

@@ -1,50 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
-import { supabase } from "../services/supabase";
-import { SERVICES } from "../theme/services.config";
 
-interface Settlement {
-  id: string;
-  driver_id: string;
-  amount: number;
-  method: string;
-  reference: string | null;
-  status: string;
-}
-
-export default function AdminSettlements() {
-  const [items, setItems] = useState<Settlement[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase.from("driver_settlements").select("*").eq("status", "pending_verification").order("created_at", { ascending: false });
-    setItems((data as Settlement[]) || []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const verify = useCallback(async (id: string) => {
-    await supabase.from("driver_settlements").update({ status: "verified" }).eq("id", id);
-    await load();
-  }, [load]);
-
-  return (
-    <div className="mx-auto max-w-md rounded- bg-white p-6 shadow-sm">
-      <h1 className="text- font-bold text-zinc-900">Pending Settlements</h1>
-      <div className="mt-4 space-y-2.5">
-        {loading? <p className="text-sm text-zinc-400">Loading...</p> : items.map((s) => (
-          <div key={s.id} className="flex items-center justify-between rounded- bg-zinc-50 px-4 py-3">
-            <div>
-              <p className="text- font-bold text-zinc-900">{s.driver_id} - {s.amount} DZD</p>
-              <p className="text- text-zinc-500">{s.method} {s.reference?? ""}</p>
-            </div>
-            <button onClick={() => verify(s.id)} className="rounded-xl px-4 py-2 text-xs font-bold text-white" style={{ backgroundColor: SERVICES.corsa.color }}>Verify</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+import { useState } from 'react'
+import { getUnpaidTotal, createSettlement, SettlementMethod } from '@/services/driverSettlementService'
+export default function Admin(){
+  const [driverId,setDriverId]=useState('')
+  const [total,setTotal]=useState<number| null>(null)
+  const [amount,setAmount]=useState(0)
+  const [method,setMethod]=useState<SettlementMethod>('cash')
+  return <div className="grid grid-2"><div className="card" style={{padding:20}}><h2>Settlements</h2><input className="input" placeholder="driver_id" value={driverId} onChange={e=>setDriverId(e.target.value)}/><button className="btn" style={{marginTop:12}} onClick={async()=>{ const t=await getUnpaidTotal(driverId); setTotal(t)}}>Check Balance</button>{total!==null&&<div style={{marginTop:12,fontSize:24,fontWeight:800}}>{total} DZD</div>}</div><div className="card" style={{padding:20}}><h3>New Settlement</h3><input className="input" type="number" value={amount} onChange={e=>setAmount(Number(e.target.value))}/><div style={{display:'flex',gap:8,marginTop:12}}>{(['cash','bank','mobile'] as SettlementMethod[]).map(m=><button key={m} className={method===m?'btn':'btn btn-ghost'} onClick={()=>setMethod(m)}>{m}</button>)}</div><button className="btn btn-lg" style={{marginTop:12}} onClick={async()=>{ await createSettlement(driverId,amount,method); alert('settled')}}>Settle</button></div></div>
 }

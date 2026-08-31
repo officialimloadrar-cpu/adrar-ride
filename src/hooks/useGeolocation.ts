@@ -1,42 +1,8 @@
-import { useState } from 'react';
-import type { Place } from '../services/geocoding';
 
-export function useGeolocation() {
-  const [location, setLocation] = useState<Place | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const getLocation = () => {
-    setLoading(true);
-    setError(null);
-    if (!navigator.geolocation) {
-      setError('Geolocation not supported');
-      setLoading(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({
-          name: 'Current location',
-          displayName: 'Current location',
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-        });
-        setLoading(false);
-      },
-      (err) => {
-        setError(err.message);
-        setLoading(false);
-      }
-    );
-  };
-
-  return { 
-    location, 
-    loading, 
-    error, 
-    getLocation,
-    position: location,
-    getCurrentPosition: getLocation
-  };
+import { useState,useCallback } from 'react'
+export function useGeolocation(){
+  const [pos,setPos]=useState<{lat:number,lng:number}|null>(null)
+  const [loading,setLoading]=useState(false)
+  const refresh=useCallback(()=>{ setLoading(true); if(!navigator.geolocation){ setPos({lat:27.87,lng:-0.28}); setLoading(false); return } navigator.geolocation.getCurrentPosition(p=>{ setPos({lat:p.coords.latitude,lng:p.coords.longitude}); setLoading(false)},()=>{ setPos({lat:27.87,lng:-0.28}); setLoading(false)}) },[])
+  return { pos, loading, refresh }
 }

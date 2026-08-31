@@ -1,28 +1,5 @@
-export type Place = {
-  name: string;
-  displayName?: string;
-  lat: number;
-  lon: number;
-};
 
-export async function reverseGeocode(lat: number, lon: number): Promise<Place> {
-  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-  const data = await res.json();
-  return { name: data.display_name, displayName: data.display_name, lat, lon };
-}
-
-export async function searchPlaces(query: string, _bias?: Place | null, _bbox?: any): Promise<Place[]> {  if (!query.trim()) return [];
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=dz`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data.map((item: any) => ({
-      name: item.display_name.split(',')[0],
-      displayName: item.display_name,
-      lat: parseFloat(item.lat),
-      lon: parseFloat(item.lon),
-    }));
-  } catch {
-    return [];
-  }
-}
+export interface Place{ lat:number; lng:number; address:string; distanceKm?:number }
+export async function reverseGeocode(lat:number,lng:number):Promise<Place>{ return { lat,lng, address:`${lat.toFixed(5)}, ${lng.toFixed(5)}` } }
+export async function searchPlaces(q:string):Promise<Place[]>{ return [] }
+export function haversine(a:{lat:number,lng:number},b:{lat:number,lng:number}){ const R=6371; const dLat=(b.lat-a.lat)*Math.PI/180; const dLng=(b.lng-a.lng)*Math.PI/180; const s1=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return R*2*Math.atan2(Math.sqrt(s1),Math.sqrt(1-s1)) }
