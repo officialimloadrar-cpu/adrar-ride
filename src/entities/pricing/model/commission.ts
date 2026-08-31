@@ -1,0 +1,1 @@
+export const commission=(a:number,n:boolean)=> Math.round(a*(n?0.15:0.13));export const netAmount=(a:number,n:boolean)=> a-commission(a,n);

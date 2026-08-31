@@ -1,0 +1,1 @@
+import { calcParcel, calcLight } from "@/entities/pricing/model/parcel";export const priceOptimizer={ optimize:(w:number,d:number,dist:number)=>({light:calcLight(w,dist),regular:calcParcel(w,d,dist)}) };

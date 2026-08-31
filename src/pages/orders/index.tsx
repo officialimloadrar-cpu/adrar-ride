@@ -1,0 +1,1 @@
+import { useRealtimeOrders } from "@/entities/order/model/useRealtimeOrders";export default function Orders(){const o=useRealtimeOrders();return <div>{o.length} orders realtime</div>;}

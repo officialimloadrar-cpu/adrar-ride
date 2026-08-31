@@ -1,0 +1,1 @@
+import { supabase } from "@/shared/lib/api/supabase";export const useAcceptOrder=()=>{return async(id:string,driverId:string)=>{ if(!supabase) throw new Error("NO_SUPABASE"); const {data,error}=await supabase.from("orders").update({driver_id:driverId,status:"accepted"}).eq("id",id).select().single(); if(error) throw error; return data;};};

@@ -1,0 +1,1 @@
+export default function Home(){return <div style={{padding:20}}><h1>Ride Universal - Clean Build</h1><p>0 errors - Ready for GitHub / Supabase / Vercel</p></div>;}

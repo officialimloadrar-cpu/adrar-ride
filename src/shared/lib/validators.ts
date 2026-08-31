@@ -1,0 +1,1 @@
+export const phoneValidator={ parse:(v:string)=>{ if(!v) throw new Error("empty"); return v; } }; export const orderSchema={ parse:(v:any)=>v };

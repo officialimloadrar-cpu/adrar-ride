@@ -1,0 +1,1 @@
+import { createBrowserRouter } from "react-router-dom";import Home from "@/pages/home/index";import Orders from "@/pages/orders/index";export const router=createBrowserRouter([{path:"/",element:<Home/>},{path:"/orders",element:<Orders/>}]);

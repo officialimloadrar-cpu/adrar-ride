@@ -1,0 +1,1 @@
+import { supabase } from "@/shared/lib/api/supabase";export const usePhoneAuth=()=>{const signIn=async(phone:string)=>{ if(!supabase) return; const {error}=await supabase.auth.signInWithOtp({phone}); if(error) throw error;}; return {signIn};};

@@ -1,9 +1,9 @@
 export const SERVICE_COLORS = {
   corsa: "#10B981",
   colis: "#FF5B00",
-  bg: "#FFF8F0",
+  bg: "#F5F5F7",
   card: "#FFFFFF",
-  text: "#121212",
-  muted: "#9A9A9A",
-  border: "#F2E8DF",
+  text: "#111827",
+  muted: "#6B7280",
+  border: "#E5E7EB",
 } as const;

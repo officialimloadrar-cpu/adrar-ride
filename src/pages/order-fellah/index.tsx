@@ -1,0 +1,1 @@
+import { getPrice } from "@/entities/pricing/model";export default function Fellah(){const p=getPrice("colis",10,{weight:5,dim:40});return <div>Fellah price {p}</div>;}

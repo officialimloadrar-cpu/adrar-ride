@@ -1,0 +1,26 @@
+export const PRICING={
+  LIGHT_CITY:{S:250,M:300,L:500},
+  LIGHT_REGION:{S:400,M:500,L:700},
+  LIGHT_NATIONAL:{S:800,M:1000,L:1300},
+  BOTTLE:{LOCAL:400,NATIONAL:800},
+  PICKUP_BASE:1500,
+  PICKUP_RATE:53.89,
+  MAX_WEIGHT_LIGHT:30,
+  COMMISSION_LOCAL:0.13,
+  COMMISSION_NATIONAL:0.15,
+  COMMISSION_PARCEL:0.15,
+  BAN_THRESHOLD:2000,
+  MATCH_MOTO:3,
+  MATCH_CARGO:20,
+  NIGHT_MIN:250,
+  NIGHT_MULT:1.25,
+  SEAT_FACTORS:[1,1.8333,2.6667,2.9667]
+} as const;
+export const TRANSPORT_TIERS=[
+  {max:5,base:150,rate:0},
+  {max:10,base:150,rate:10},
+  {max:20,base:200,rate:0},
+  {max:30,base:200,rate:7},
+  {max:80,base:270,rate:6.6},
+  {max:Infinity,base:600,rate:11.428}
+] as const;
