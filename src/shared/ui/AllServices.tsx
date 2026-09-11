@@ -11,6 +11,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/Input'
 import { supabase } from '@/shared/lib/supabase'
 import { getIsNight, getPricing } from '@/shared/lib/shift'
+import { useOrderStatus } from '@/shared/hooks/useOrdersLive'
 
 function estimateDistanceKm(a: string, b: string) {
   if (!a ||!b) return 0
@@ -36,6 +37,8 @@ export function RideRequestGreen() {
   const [distance, setDistance] = useState(0)
   const [selected, setSelected] = useState<ServiceType>(null)
   const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const liveOrder = useOrderStatus(orderId)
   const isNight = getIsNight()
   const groupPricing = getPricing('group', isNight)
   const privePricing = getPricing('prive', isNight)
@@ -45,9 +48,23 @@ export function RideRequestGreen() {
   const handleRequest = useCallback(async () => {
     if (!isValid ||!selected) return
     setLoading(true)
-    await supabase.from('orders').insert({ type: 'ride', sub_type: selected, from_address: fromAddress, to_address: toAddress, distance_km: distance, price: prices[selected!], status: 'pending' })
+    const { data } = await supabase.from('orders').insert({ type: 'ride', sub_type: selected, from_address: fromAddress, to_address: toAddress, distance_km: distance, price: prices[selected!], status: 'pending' }).select().single()
+    if (data) setOrderId(data.id)
     setLoading(false)
   }, [isValid, selected, fromAddress, toAddress, distance, prices])
+  if (orderId) {
+    return (
+      <ColoredCard bg={colors.bg} borderColor={colors.light}>
+        <div className="text-center space-y-4 py-4">
+          <h2 className="text-lg font-bold" style={{ color: colors.primary }}>تتبع طلبك Live</h2>
+          <div className="text-4xl">{!liveOrder || liveOrder.status === 'pending'? '⏳' : liveOrder.status === 'accepted'? '✅' : '📦'}</div>
+          <div className="font-bold text-lg">{!liveOrder? 'جاري الإرسال...' : liveOrder.status === 'pending'? 'نبحث عن سائق قريب...' : liveOrder.status === 'accepted'? 'السائق في الطريق إليك!' : 'تم التوصيل بنجاح'}</div>
+          <div className="text-xs text-zinc-500">{orderId.slice(0, 8)} - {liveOrder?.price || (selected? prices[selected] : 0)} دج</div>
+          <Button onClick={() => setOrderId(null)} className="w-full h-12 font-bold text-white mt-4" style={{ backgroundColor: colors.primary }}>طلب جديد</Button>
+        </div>
+      </ColoredCard>
+    )
+  }
   return (
     <ColoredCard bg={colors.bg} borderColor={colors.light}>
       <div className="flex justify-between items-center">
@@ -58,14 +75,14 @@ export function RideRequestGreen() {
       <Input placeholder="إلى أين - الوجهة" value={toAddress} onChange={e => setToAddress(e.target.value)} />
       {distance > 0 && <p className="text-xs font-bold" style={{ color: colors.primary }}>{distance} كم - محسوب تلقائيا</p>}
       <div className="grid grid-cols-3 gap-3">
-        {(['group','prive_3','prive_4'] as ServiceType[]).map(s => (
-          <button key={s} onClick={() => setSelected(s)} className="p-3 rounded-xl border-2 text-sm font-bold" style={{ background: selected===s?colors.primary:'white', color: selected===s?'white':colors.primary, borderColor: colors.primary }}>
-            {s==='group'?'جماعي': s==='prive_3'?'خاص 3':'خاص 4'}
-            {distance>0 && <div className="text-xs mt-1">{prices[s!]} دج</div>}
+        {(['group', 'prive_3', 'prive_4'] as ServiceType[]).map(s => (
+          <button key={s} onClick={() => setSelected(s)} className="p-3 rounded-xl border-2 text-sm font-bold" style={{ background: selected === s? colors.primary : 'white', color: selected === s? 'white' : colors.primary, borderColor: colors.primary }}>
+            {s === 'group'? 'جماعي' : s === 'prive_3'? 'خاص 3' : 'خاص 4'}
+            {distance > 0 && <div className="text-xs mt-1">{prices[s!]} دج</div>}
           </button>
         ))}
       </div>
-      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{loading?'جاري...': selected? `طلب - ${prices[selected!]} دج` : 'اختر الخدمة'}</Button>
+      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{loading? 'جاري...' : selected? `طلب - ${prices[selected!]} دج` : 'اختر الخدمة'}</Button>
     </ColoredCard>
   )
 }
@@ -84,21 +101,43 @@ export function MaklaRequestRed() {
   const [items, setItems] = useState("")
   const [distance, setDistance] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const liveOrder = useOrderStatus(orderId)
   useEffect(() => { if (deliveryAddress && selectedRestaurant) setDistance(estimateDistanceKm(deliveryAddress, selectedRestaurant.address)); else setDistance(0) }, [deliveryAddress, selectedRestaurant])
-  const price = useMemo(() => distance===0?0: distance<=5?250:250+(distance-5)*30, [distance])
+  const price = useMemo(() => distance === 0? 0 : distance <= 5? 250 : 250 + (distance - 5) * 30, [distance])
   const isValid = deliveryAddress.trim() && selectedRestaurant && items.trim()
+  const handleRequest = useCallback(async () => {
+    if (!isValid) return
+    setLoading(true)
+    const { data } = await supabase.from('orders').insert({ type: 'makla', sub_type: items.slice(0, 50), from_address: selectedRestaurant!.address, to_address: deliveryAddress, distance_km: distance, price, status: 'pending' }).select().single()
+    if (data) setOrderId(data.id)
+    setLoading(false)
+  }, [isValid, deliveryAddress, selectedRestaurant, items, distance, price])
+  if (orderId) {
+    return (
+      <ColoredCard bg={colors.bg} borderColor={colors.light}>
+        <div className="text-center space-y-4 py-4">
+          <h2 className="text-lg font-bold" style={{ color: colors.primary }}>تتبع الطلب Live</h2>
+          <div className="text-4xl">{!liveOrder || liveOrder.status === 'pending'? '⏳' : liveOrder.status === 'accepted'? '✅' : '📦'}</div>
+          <div className="font-bold text-lg">{!liveOrder? 'جاري الإرسال...' : liveOrder.status === 'pending'? 'المطعم يحضر طلبك...' : liveOrder.status === 'accepted'? 'السائق في الطريق إليك!' : 'تم التوصيل'}</div>
+          <div className="text-xs text-zinc-500">{orderId.slice(0, 8)} - {price} دج</div>
+          <Button onClick={() => setOrderId(null)} className="w-full h-12 font-bold text-white mt-4" style={{ backgroundColor: colors.primary }}>طلب جديد</Button>
+        </div>
+      </ColoredCard>
+    )
+  }
   return (
     <ColoredCard bg={colors.bg} borderColor={colors.light}>
-      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance>0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج - {distance} كم</span>}</div>
+      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance > 0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج - {distance} كم</span>}</div>
       <Input placeholder="عنوان التوصيل" value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)} />
       <div className="relative">
-        <button onClick={()=>setShow(!show)} className="w-full p-3 border-2 rounded-xl bg-white text-right font-bold" style={{ borderColor: colors.primary, color: colors.primary }}>{selectedRestaurant?selectedRestaurant.name:'اختر المطعم - قائمة تلقائية'}</button>
-        {show && <div className="absolute z-10 mt-2 w-full bg-white border-2 rounded-xl shadow-lg" style={{ borderColor: colors.light }}>{restaurants.map(r=>(
-          <button key={r.id} onClick={()=>{setSelectedRestaurant(r); setShow(false)}} className="w-full flex gap-3 p-3 hover:bg-red-50 text-right border-b"><img src={r.image} className="w-16 h-12 rounded-lg object-cover" alt=""/><div><div className="font-bold text-sm">{r.name}</div><div className="text-xs text-zinc-500">{r.owner}</div></div></button>
+        <button onClick={() => setShow(!show)} className="w-full p-3 border-2 rounded-xl bg-white text-right font-bold" style={{ borderColor: colors.primary, color: colors.primary }}>{selectedRestaurant? selectedRestaurant.name : 'اختر المطعم - قائمة تلقائية'}</button>
+        {show && <div className="absolute z-10 mt-2 w-full bg-white border-2 rounded-xl shadow-lg" style={{ borderColor: colors.light }}>{restaurants.map(r => (
+          <button key={r.id} onClick={() => { setSelectedRestaurant(r); setShow(false) }} className="w-full flex gap-3 p-3 hover:bg-red-50 text-right border-b"><img src={r.image} className="w-16 h-12 rounded-lg object-cover" alt="" /><div><div className="font-bold text-sm">{r.name}</div><div className="text-xs text-zinc-500">{r.owner}</div></div></button>
         ))}</div>}
       </div>
-      <Input placeholder="الطلبات" value={items} onChange={e=>setItems(e.target.value)} />
-      <Button disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{isValid?`اطلب الآن - ${price} دج`:'اختر المطعم'}</Button>
+      <Input placeholder="الطلبات" value={items} onChange={e => setItems(e.target.value)} />
+      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{loading? 'جاري...' : isValid? `اطلب الآن - ${price} دج` : 'اختر المطعم'}</Button>
     </ColoredCard>
   )
 }
@@ -115,19 +154,43 @@ export function RentalRequestYellow() {
   const [car, setCar] = useState<Car | null>(null)
   const [show, setShow] = useState(false)
   const [days, setDays] = useState(1)
-  const total = useMemo(()=> car?car.pricePerDay*days:0, [car, days])
+  const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const liveOrder = useOrderStatus(orderId)
+  const total = useMemo(() => car? car.pricePerDay * days : 0, [car, days])
+  const isValid = place.trim() && car && days > 0
+  const handleRequest = useCallback(async () => {
+    if (!isValid) return
+    setLoading(true)
+    const { data } = await supabase.from('orders').insert({ type: 'rental', sub_type: car!.name, from_address: place, to_address: car!.owner, distance_km: days, price: total, status: 'pending' }).select().single()
+    if (data) setOrderId(data.id)
+    setLoading(false)
+  }, [isValid, place, car, days, total])
+  if (orderId) {
+    return (
+      <ColoredCard bg={colors.bg} borderColor={colors.light}>
+        <div className="text-center space-y-4 py-4">
+          <h2 className="font-bold text-black">تتبع الحجز Live</h2>
+          <div className="text-4xl">{!liveOrder || liveOrder.status === 'pending'? '⏳' : liveOrder.status === 'accepted'? '✅' : '📦'}</div>
+          <div className="font-bold text-black">{!liveOrder? 'جاري الإرسال...' : liveOrder.status === 'pending'? 'نبحث عن سيارة...' : liveOrder.status === 'accepted'? 'تم تأكيد الحجز!' : 'تم'}</div>
+          <div className="text-xs text-zinc-600">{orderId.slice(0, 8)} - {total} دج</div>
+          <Button onClick={() => setOrderId(null)} className="w-full h-12 font-black text-black border-2 mt-4" style={{ backgroundColor: colors.primary, borderColor: colors.light }}>حجز جديد</Button>
+        </div>
+      </ColoredCard>
+    )
+  }
   return (
     <ColoredCard bg={colors.bg} borderColor={colors.light}>
       <div className="flex justify-between"><h2 className="font-bold flex gap-2 text-black">{colors.icon} {colors.label}</h2>{car && <span className="font-black text-black">{total} دج</span>}</div>
-      <Input placeholder="مكان الاستلام" value={place} onChange={e=>setPlace(e.target.value)} />
+      <Input placeholder="مكان الاستلام" value={place} onChange={e => setPlace(e.target.value)} />
       <div className="relative">
-        <button onClick={()=>setShow(!show)} className="w-full p-3 border-2 rounded-xl bg-white text-right font-bold text-black" style={{ borderColor: colors.light }}>{car?`${car.name} - ${car.owner}`:'اختر نوع السيارة'}</button>
-        {show && <div className="absolute z-10 w-full bg-white border-2 rounded-xl shadow-lg mt-2" style={{ borderColor: colors.light }}>{cars.map(c=>(
-          <button key={c.id} onClick={()=>{setCar(c); setShow(false)}} className="w-full flex gap-3 p-3 text-right border-b"><img src={c.image} className="w-16 h-12 rounded-lg object-cover" alt=""/><div><div className="font-bold text-sm text-black">{c.name}</div><div className="text-xs text-zinc-600">{c.owner} - {c.pricePerDay} دج/يوم</div></div></button>
+        <button onClick={() => setShow(!show)} className="w-full p-3 border-2 rounded-xl bg-white text-right font-bold text-black" style={{ borderColor: colors.light }}>{car? `${car.name} - ${car.owner}` : 'اختر نوع السيارة'}</button>
+        {show && <div className="absolute z-10 w-full bg-white border-2 rounded-xl shadow-lg mt-2" style={{ borderColor: colors.light }}>{cars.map(c => (
+          <button key={c.id} onClick={() => { setCar(c); setShow(false) }} className="w-full flex gap-3 p-3 text-right border-b"><img src={c.image} className="w-16 h-12 rounded-lg object-cover" alt="" /><div><div className="font-bold text-sm text-black">{c.name}</div><div className="text-xs text-zinc-600">{c.owner} - {c.pricePerDay} دج/يوم</div></div></button>
         ))}</div>}
       </div>
-      <Input type="number" min={1} value={days} onChange={e=>setDays(Number(e.target.value))} />
-      <Button className="w-full h-12 font-black text-black border-2" style={{ backgroundColor: colors.primary, borderColor: colors.light }}>{car?`احجز - ${total} دج`:'اختر السيارة'}</Button>
+      <Input type="number" min={1} value={days} onChange={e => setDays(Number(e.target.value))} />
+      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-black text-black border-2" style={{ backgroundColor: colors.primary, borderColor: colors.light }}>{loading? 'جاري...' : car? `احجز - ${total} دج` : 'اختر السيارة'}</Button>
     </ColoredCard>
   )
 }
@@ -137,15 +200,39 @@ export function ColisRequestOrange() {
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
   const [distance, setDistance] = useState(0)
-  useEffect(()=>{ if(from&&to) setDistance(estimateDistanceKm(from,to)); else setDistance(0)},[from,to])
-  const price = useMemo(()=> distance===0?0: 300+distance*25, [distance])
+  const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const liveOrder = useOrderStatus(orderId)
+  useEffect(() => { if (from && to) setDistance(estimateDistanceKm(from, to)); else setDistance(0) }, [from, to])
+  const price = useMemo(() => distance === 0? 0 : 300 + distance * 25, [distance])
+  const isValid = from.trim() && to.trim() && distance > 0
+  const handleRequest = useCallback(async () => {
+    if (!isValid) return
+    setLoading(true)
+    const { data } = await supabase.from('orders').insert({ type: 'colis', from_address: from, to_address: to, distance_km: distance, price, status: 'pending' }).select().single()
+    if (data) setOrderId(data.id)
+    setLoading(false)
+  }, [isValid, from, to, distance, price])
+  if (orderId) {
+    return (
+      <ColoredCard bg={colors.bg} borderColor={colors.light}>
+        <div className="text-center space-y-4 py-4">
+          <h2 className="text-lg font-bold" style={{ color: colors.primary }}>تتبع الطرد Live</h2>
+          <div className="text-4xl">{!liveOrder || liveOrder.status === 'pending'? '⏳' : liveOrder.status === 'accepted'? '✅' : '📦'}</div>
+          <div className="font-bold text-lg">{!liveOrder? 'جاري الإرسال...' : liveOrder.status === 'pending'? 'نبحث عن سائق...' : liveOrder.status === 'accepted'? 'السائق في الطريق!' : 'تم التوصيل'}</div>
+          <div className="text-xs text-zinc-500">{orderId.slice(0, 8)} - {price} دج</div>
+          <Button onClick={() => setOrderId(null)} className="w-full h-12 font-bold text-white mt-4" style={{ backgroundColor: colors.primary }}>طلب جديد</Button>
+        </div>
+      </ColoredCard>
+    )
+  }
   return (
     <ColoredCard bg={colors.bg} borderColor={colors.light}>
-      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance>0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج</span>}</div>
-      <Input placeholder="تحديد مكان الإننطلاق" value={from} onChange={e=>setFrom(e.target.value)} />
-      <Input placeholder="الوجهة" value={to} onChange={e=>setTo(e.target.value)} />
-      {distance>0 && <p className="text-xs font-bold" style={{ color: colors.primary }}>{distance} كم</p>}
-      <Button className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{distance>0?`إرسال طرد - ${price} دج`:'اختر الوجهة'}</Button>
+      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance > 0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج</span>}</div>
+      <Input placeholder="تحديد مكان الإننطلاق" value={from} onChange={e => setFrom(e.target.value)} />
+      <Input placeholder="الوجهة" value={to} onChange={e => setTo(e.target.value)} />
+      {distance > 0 && <p className="text-xs font-bold" style={{ color: colors.primary }}>{distance} كم</p>}
+      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{loading? 'جاري...' : distance > 0? `إرسال طرد - ${price} دج` : 'اختر الوجهة'}</Button>
     </ColoredCard>
   )
 }
@@ -155,15 +242,39 @@ export function CargoRequestPurple() {
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
   const [distance, setDistance] = useState(0)
-  useEffect(()=>{ if(from&&to) setDistance(estimateDistanceKm(from,to)); else setDistance(0)},[from,to])
-  const price = useMemo(()=> distance===0?0: 600+distance*40, [distance])
+  const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const liveOrder = useOrderStatus(orderId)
+  useEffect(() => { if (from && to) setDistance(estimateDistanceKm(from, to)); else setDistance(0) }, [from, to])
+  const price = useMemo(() => distance === 0? 0 : 600 + distance * 40, [distance])
+  const isValid = from.trim() && to.trim() && distance > 0
+  const handleRequest = useCallback(async () => {
+    if (!isValid) return
+    setLoading(true)
+    const { data } = await supabase.from('orders').insert({ type: 'cargo', from_address: from, to_address: to, distance_km: distance, price, status: 'pending' }).select().single()
+    if (data) setOrderId(data.id)
+    setLoading(false)
+  }, [isValid, from, to, distance, price])
+  if (orderId) {
+    return (
+      <ColoredCard bg={colors.bg} borderColor={colors.light}>
+        <div className="text-center space-y-4 py-4">
+          <h2 className="text-lg font-bold" style={{ color: colors.primary }}>تتبع الشحن Live</h2>
+          <div className="text-4xl">{!liveOrder || liveOrder.status === 'pending'? '⏳' : liveOrder.status === 'accepted'? '✅' : '📦'}</div>
+          <div className="font-bold text-lg">{!liveOrder? 'جاري الإرسال...' : liveOrder.status === 'pending'? 'نبحث عن شاحنة...' : liveOrder.status === 'accepted'? 'الشاحنة في الطريق!' : 'تم التوصيل'}</div>
+          <div className="text-xs text-zinc-500">{orderId.slice(0, 8)} - {price} دج</div>
+          <Button onClick={() => setOrderId(null)} className="w-full h-12 font-bold text-white mt-4" style={{ backgroundColor: colors.primary }}>طلب جديد</Button>
+        </div>
+      </ColoredCard>
+    )
+  }
   return (
     <ColoredCard bg={colors.bg} borderColor={colors.light}>
-      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance>0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج</span>}</div>
-      <Input placeholder="تحديد مكان الإنطلاق" value={from} onChange={e=>setFrom(e.target.value)} />
-      <Input placeholder="الوجهة" value={to} onChange={e=>setTo(e.target.value)} />
-      {distance>0 && <p className="text-xs font-bold" style={{ color: colors.primary }}>{distance} كم</p>}
-      <Button className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{distance>0?`شحن ثقيل - ${price} دج`:'اختر الوجهة'}</Button>
+      <div className="flex justify-between"><h2 className="font-bold flex gap-2" style={{ color: colors.primary }}>{colors.icon} {colors.label}</h2>{distance > 0 && <span className="font-black" style={{ color: colors.primary }}>{price} دج</span>}</div>
+      <Input placeholder="تحديد مكان الإنطلاق" value={from} onChange={e => setFrom(e.target.value)} />
+      <Input placeholder="الوجهة" value={to} onChange={e => setTo(e.target.value)} />
+      {distance > 0 && <p className="text-xs font-bold" style={{ color: colors.primary }}>{distance} كم</p>}
+      <Button onClick={handleRequest} disabled={!isValid || loading} className="w-full h-12 font-bold text-white" style={{ backgroundColor: colors.primary }}>{loading? 'جاري...' : distance > 0? `شحن ثقيل - ${price} دج` : 'اختر الوجهة'}</Button>
     </ColoredCard>
   )
 }
