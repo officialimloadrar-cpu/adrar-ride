@@ -1,14 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { getT } from '../lib/translations'
 import { calcInsideGroup, calcInsideSolo, calcOutsideSeat, calcCargo, isNightNow } from '../lib/pricingEngine'
+function getAutoDistance(a:string,b:string){
+  const s=(a+b).toLowerCase()
+  if(s.includes('بودة')) return 20
+  if(s.includes('فنوغيل')) return 32
+  if(s.includes('كنتة')) return 80
+  if(s.includes('رقان')) return 160
+  if(s.includes('تيميمون')) return 240
+  if(s.includes('أولف')||s.includes('اولف')) return 240
+  if(s.includes('باجي')) return 600
+  return 12
+}
 export default function ClientRequestCorsa({lang}:{lang:string}){
   const t=getT(lang)
-  const [o,setO]=useState('أدرار - وسط')
-  const [d,setD]=useState('تيميمون')
-  const [km,setKm]=useState(12)
+  const [o,setO]=useState('')
+  const [d,setD]=useState('')
+  const [km,setKm]=useState(0)
   const [group,setGroup]=useState(false)
   const [ok,setOk]=useState(false)
+  useEffect(()=>{ if(o&&d){ setKm(getAutoDistance(o,d)) } },[o,d])
   const night=isNightNow()
   const outside=calcOutsideSeat(d)
   const price=outside>0?outside:(km<=20?(group?calcInsideGroup(km,night):calcInsideSolo(km,night)):calcCargo(km))
@@ -24,8 +36,8 @@ export default function ClientRequestCorsa({lang}:{lang:string}){
         <input value={o} onChange={e=>setO(e.target.value)} placeholder={t.from} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
         <input value={d} onChange={e=>setD(e.target.value)} placeholder={t.to} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
         <div style={{display:'flex',gap:8}}>
-          <input type="number" value={km} onChange={e=>setKm(Number(e.target.value))} style={{flex:1,padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
-          <button onClick={()=>setGroup(!group)} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb',background:group?'#111':'#fff',color:group?'#fff':'#111'}}>{group?'جماعة':'وحدو'}</button>
+          <div style={{flex:1,padding:16,borderRadius:14,border:'1px solid #e5e7eb',background:'#f9f9f9'}}>{km>0?km+' km':t.chooseDest}</div>
+          <button onClick={()=>setGroup(!group)} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb',background:group?'#111':'#fff',color:group?'#fff':'#111',fontWeight:700}}>{group?t.group:t.special}</button>
         </div>
         <div style={{padding:20,borderRadius:16,background:'#111',color:'#fff',display:'flex',justifyContent:'space-between'}}>
           <span style={{opacity:.6}}>{t.total}</span>
