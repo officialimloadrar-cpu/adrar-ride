@@ -1,1 +1,1 @@
-import { calcParcel } from "./parcel";export const calcColis=(w:number,d:number,dist:number)=> calcParcel(w,d,dist);
+export * from '@/services/pricingEngine';

@@ -1,0 +1,14 @@
+DRIVER PLACEMENT GUIDE
+
+1. src/features/driver/ui/DriverServiceSelection.tsx -> ضعه في src/features/driver/ui/
+2. src/features/driver/ui/DriverDashboard.tsx -> ضعه في src/features/driver/ui/
+3. src/pages/driver/index.tsx -> ضعه في src/pages/driver/index.tsx (استبدل القديم)
+
+SQL needed in Supabase drivers table:
+alter table drivers add column if not exists services text[] default '{}';
+
+Flow:
+- First login: driver.services is null -> shows ServiceSelection
+- After selection -> saves array like ['ride','colis']
+- Dashboard shows only orders where type IN driver.services
+- Filter tabs show only his services + All

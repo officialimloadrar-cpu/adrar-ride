@@ -24,3 +24,4 @@ export const TRANSPORT_TIERS=[
   {max:80,base:270,rate:6.6},
   {max:Infinity,base:600,rate:11.428}
 ] as const;
+export const GOLDEN_RATE = 500;

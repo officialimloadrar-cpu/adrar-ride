@@ -1,19 +1,17 @@
-import { useState,useEffect } from "react";
-import { supabase } from "@/shared/lib/api/supabase";
-export const useDriverDebt=(driverId?:string)=>{
-  const [debt,setDebt]=useState(0);
-  const [rows,setRows]=useState<any[]>([]);
-  useEffect(()=>{
-    if(!supabase) return;
-    const load=async()=>{
-      let q=supabase.from("debts").select("amount,driver_id,created_at");
-      if(driverId) q=q.eq("driver_id",driverId);
-      const {data}=await q;
-      const list=(data||[]) as any[];
-      setRows(list);
-      setDebt(list.reduce((s:number,r:any)=> s+Number(r.amount||0),0));
-    };
-    load();
-  },[driverId]);
-  return {debt,rows};
-};
+import { useMemo } from "react";
+const DEBT_LIMIT = 2000;
+export function useDriverDebt(accumulated: number = 0, expiresAt?: string | null) {
+  const isBlocked = useMemo(() => {
+    if (!expiresAt) return accumulated >= DEBT_LIMIT;
+    return accumulated >= DEBT_LIMIT && new Date(expiresAt).getTime() > Date.now();
+  }, [accumulated, expiresAt]);
+  const timer = useMemo(() => {
+    if (!expiresAt) return "--:--";
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return "00:00";
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return `${h}h ${m}m`;
+  }, [expiresAt]);
+  return { debt: accumulated, isBlocked, timer, limit: DEBT_LIMIT, rows: [] as any[] };
+}

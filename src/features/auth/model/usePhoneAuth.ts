@@ -1,1 +1,9 @@
-import { supabase } from "@/shared/lib/api/supabase";export const usePhoneAuth=()=>{const signIn=async(phone:string)=>{ if(!supabase) return; const {error}=await supabase.auth.signInWithOtp({phone}); if(error) throw error;}; return {signIn};};
+import { useState } from "react";
+export function usePhoneAuth() {
+  const [loading, setLoading] = useState(false);
+  async function signIn(phone: string) {
+    setLoading(true);
+    try { console.log(phone); } finally { setLoading(false); }
+  }
+  return { signIn, loading };
+}

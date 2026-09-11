@@ -1,0 +1,20 @@
+PLACEMENT GUIDE - Wassli App
+
+1. Extract zip directly into your project root. Structure is already src/...
+
+2. Exact paths:
+src/features/colis/ui/ColisRequest.tsx -> copy to src/features/colis/ui/ColisRequest.tsx
+src/features/cargo/ui/CargoRequest.tsx -> copy to src/features/cargo/ui/CargoRequest.tsx
+src/features/rental/ui/RentalRequest.tsx -> copy to src/features/rental/ui/RentalRequest.tsx
+src/features/makla/ui/MaklaRequest.tsx -> copy to src/features/makla/ui/MaklaRequest.tsx
+src/pages/AdrarPage.tsx -> copy to src/pages/AdrarPage.tsx
+
+3. If you have adrar ride page at src/app/adrar/page.tsx, replace its content with AdrarPage.tsx content or import AdrarPage inside it.
+
+4. Do NOT put them inside src/services or directly inside adrar folder. Keep features separation.
+
+5. All services use:
+getPricing('colis', false)
+is_night: false
+
+Only RideRequest uses getIsNight.

@@ -1,0 +1,302 @@
+Folder PATH listing
+Volume serial number is 2A16-BDA0
+C:\USERS\PC\ADRAR-RIDE\SRC
+│   App.css
+│   App.tsx
+│   env.d.ts
+│   index.css
+│   main.tsx
+│   vite-env.d.ts
+│   
+├───ai
+│       priceOptimizer.ts
+│       
+├───app
+│       App.tsx
+│       providers.tsx
+│       router.tsx
+│       
+├───assets
+│       hero.png
+│       react.svg
+│       vite.svg
+│       
+├───components
+│       PriceCard.tsx
+│       
+├───config
+│       countries.ts
+│       
+├───entities
+│   ├───driver
+│   │   └───model
+│   │           useAcceptOrder.ts
+│   │           useDriverAuth.t
+│   │           useDriverDebt.ts
+│   │           useRealtimeColis.ts
+│   │           useRealtimeDriver.ts
+│   │           useRealtimeTransport.ts
+│   │           
+│   ├───geo
+│   │       adrar-zones.ts
+│   │       distanceEngine.ts
+│   │       matching.ts
+│   │       zones.ts
+│   │       
+│   ├───order
+│   │   └───model
+│   │           orderTypes.ts
+│   │           pricing.types.ts
+│   │           pricingEngineTransport.ts
+│   │           types.ts
+│   │           useAcceptOrder.ts
+│   │           useCreateOrder.ts
+│   │           useOrders.ts
+│   │           useRealtimeOrders.ts
+│   │           
+│   ├───pricing
+│   │   └───model
+│   │           baseFare.ts
+│   │           cargoPricing.ts
+│   │           colisPricing.ts
+│   │           commission.ts
+│   │           commissionEngine.ts
+│   │           debtEngine.ts
+│   │           distanceEngine.ts
+│   │           heavyPricing.ts
+│   │           index.ts
+│   │           maklaPricing.ts
+│   │           matchingEngine.ts
+│   │           parcel.ts
+│   │           pricingEngineColis.ts
+│   │           pricingEngineTransport.ts
+│   │           rentalPricing.ts
+│   │           rotorEngine.ts
+│   │           soukPricing.ts
+│   │           transport.ts
+│   │           transportPricing.ts
+│   │           
+│   ├───vehicle
+│   │   └───model
+│   │           fleet.ts
+│   │           vehicleTypes.ts
+│   │           
+│   └───wallet
+│       └───ui
+│               WalletBlockedCard.tsx
+│               
+├───features
+│   │   README.txt
+│   │   
+│   ├───admin
+│   │   └───ui
+│   │           AdminPricingPanel.tsx
+│   │           
+│   ├───auth
+│   │   ├───model
+│   │   │       usePhoneAuth.ts
+│   │   │       
+│   │   └───ui
+│   │           PhoneAuth.tsx
+│   │           
+│   ├───bouteille-water
+│   │       index.ts
+│   │       
+│   ├───cargo
+│   │   └───ui
+│   │           CargoRequest.tsx
+│   │           
+│   ├───chat
+│   │       index.ts
+│   │       
+│   ├───colis
+│   │   └───ui
+│   │           ColisRequest.tsx
+│   │           
+│   ├───documents
+│   │       index.ts
+│   │       
+│   ├───driver
+│   │   └───ui
+│   │           DriverDashboard.tsx
+│   │           DriverServiceSelection.tsx
+│   │           
+│   ├───fellah
+│   │   ├───boxes
+│   │   │       index.ts
+│   │   │       
+│   │   ├───crops
+│   │   │       index.ts
+│   │   │       
+│   │   ├───poultry
+│   │   │       index.ts
+│   │   │       
+│   │   ├───rabbits
+│   │   │       index.ts
+│   │   │       
+│   │   └───sheep-calf
+│   │           index.ts
+│   │           
+│   ├───fleet
+│   │       index.ts
+│   │       
+│   ├───fourgon-demenagement
+│   │       index.ts
+│   │       
+│   ├───hilux-5389
+│   │       index.ts
+│   │       
+│   ├───language
+│   │   └───ui
+│   │           LanguageGate.tsx
+│   │           
+│   ├───light
+│   │   │   index.ts
+│   │   │   
+│   │   └───ui
+│   │           OrderLightForm.tsx
+│   │           
+│   ├───makla
+│   │   └───ui
+│   │           MaklaRequest.tsx
+│   │           
+│   ├───order
+│   │   └───ui
+│   │           TrackingPage.tsx
+│   │           
+│   ├───payment
+│   │       index.ts
+│   │       
+│   ├───pets
+│   │       index.ts
+│   │       
+│   ├───pharma
+│   │       index.ts
+│   │       
+│   ├───rating
+│   │       index.ts
+│   │       
+│   ├───rental
+│   │   └───ui
+│   │           RentalRequest.tsx
+│   │           
+│   ├───retour-vide
+│   │       index.ts
+│   │       
+│   ├───ride
+│   │   └───ui
+│   │           RideRequest.tsx
+│   │           RideTracking.tsx
+│   │           
+│   ├───tracking-live
+│   │       index.ts
+│   │       
+│   ├───voyage
+│   │       index.ts
+│   │       
+│   └───wallet
+│       │   index.ts
+│       │   useWallet.ts
+│       │   
+│       └───lib
+│               useSettlement.ts
+│               
+├───hooks
+│       useGeolocation.ts
+│       
+├───lib
+│       supabase.ts
+│       
+├───pages
+│   │   AdrarPage.tsx
+│   │   
+│   ├───admin
+│   │       index.tsx
+│   │       
+│   ├───client
+│   │       index.tsx
+│   │       
+│   ├───debt
+│   │       index.tsx
+│   │       
+│   ├───driver
+│   │       index.tsx
+│   │       
+│   ├───home
+│   │       index.tsx
+│   │       
+│   ├───language
+│   │       index.tsx
+│   │       
+│   ├───order-fellah
+│   │       index.tsx
+│   │       
+│   ├───order-light
+│   │       index.tsx
+│   │       
+│   ├───orders
+│   │       index.tsx
+│   │       
+│   └───wallet
+├───screens
+│       AdminSettlements.tsx
+│       ClientRequestColis.tsx
+│       ClientRequestCorsa.tsx
+│       DriverColis.tsx
+│       DriverDebtScreen.tsx
+│       DriverDualMode.tsx
+│       Home.tsx
+│       
+├───services
+│       driverSettlementService.ts
+│       geocoding.ts
+│       orders.ts
+│       pricingEngine.ts
+│       supabase.ts
+│       
+├───shared
+│   ├───config
+│   │       i18n.ts
+│   │       
+│   ├───lib
+│   │   │   adminGuard.ts
+│   │   │   constants.ts
+│   │   │   money.ts
+│   │   │   offlineQueue.ts
+│   │   │   serviceColors.ts
+│   │   │   shift.ts
+│   │   │   supabase.ts
+│   │   │   utils.ts
+│   │   │   validators.ts
+│   │   │   
+│   │   ├───ai-superior
+│   │   │       demandForecast.ts
+│   │   │       routeOptimizer.ts
+│   │   │       smartPricing.ts
+│   │   │       
+│   │   └───api
+│   │           supabase.ts
+│   │           
+│   └───ui
+│           AllServices.tsx
+│           button.tsx
+│           Card.tsx
+│           Input.tsx
+│           LanguageSelector.tsx
+│           Map.tsx
+│           
+├───theme
+│       colors.ts
+│       services.config.ts
+│       
+└───widgets
+    ├───map
+    │       MapView.tsx
+    │       
+    ├───price-estimator
+    │   └───ui
+    │           PriceEstimator.tsx
+    │           
+    └───pricing
+            PriceCalculator.tsx
+            
