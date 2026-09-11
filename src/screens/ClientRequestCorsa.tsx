@@ -6,26 +6,32 @@ export default function ClientRequestCorsa(){
   const [dest,setDest]=useState('تيميمون')
   const [loading,setLoading]=useState(false)
   const [done,setDone]=useState(false)
+  // الحساب يبقى لداخل فقط - ما نوروهش للزبون
+  const distance = 146
+  const total = 700
 
   const request = async ()=>{
     setLoading(true)
-    const { error } = await supabase.from('corsa_orders').insert([{
-      origin, dest, distance:146, seats:4, type:'collective', status:'pending'
-    }])
+    await supabase.from('corsa_orders').insert([{ origin, dest, distance, seats:4, type:'collective', status:'pending' }])
     setLoading(false)
-    if(!error) setDone(true)
+    setDone(true)
   }
 
-  if(done) return <div style={{padding:'40px 0',fontWeight:700}}>تم إرسال الطلب - في انتظار السائق</div>
+  if(done) return <div style={{padding:'80px 0',textAlign:'center',fontSize:20,fontWeight:800}}>تم إرسال الطلب</div>
 
   return (
-    <div style={{maxWidth:420,padding:'24px 0'}}>
-      <h2 style={{fontSize:28,fontWeight:800,letterSpacing:-1,margin:'0 0 24px'}}>Corsa</h2>
-      <div style={{display:'grid',gap:12}}>
-        <input value={origin} onChange={e=>setOrigin(e.target.value)} style={{padding:'14px 16px',borderRadius:12,border:'1px solid #e5e7eb'}} />
-        <input value={dest} onChange={e=>setDest(e.target.value)} style={{padding:'14px 16px',borderRadius:12,border:'1px solid #e5e7eb'}} />
-        <div style={{padding:'12px 16px',background:'#f9fafb',borderRadius:12}}>146 km • 4 seats • Collective</div>
-        <button onClick={request} disabled={loading} style={{padding:'14px',borderRadius:12,background:'#111',color:'#fff',border:'none',fontWeight:600}}>{loading?'...':'Confirm'}</button>
+    <div style={{maxWidth:420,margin:'0 auto',padding:'24px 16px'}}>
+      <h2 style={{fontSize:32,fontWeight:900,letterSpacing:-1.5,margin:'0 0 28px'}}>Ride</h2>
+      <div style={{display:'grid',gap:14}}>
+        <input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder="من" style={{padding:'16px',borderRadius:14,border:'1px solid #e5e7eb',fontSize:16}} />
+        <input value={dest} onChange={e=>setDest(e.target.value)} placeholder="إلى" style={{padding:'16px',borderRadius:14,border:'1px solid #e5e7eb',fontSize:16}} />
+        
+        <div style={{marginTop:12,padding:'20px',background:'#111',color:'#fff',borderRadius:16,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{opacity:.6}}>Total</span>
+          <span style={{fontSize:28,fontWeight:800}}>DZD {total}</span>
+        </div>
+
+        <button onClick={request} disabled={loading} style={{marginTop:8,padding:'16px',borderRadius:14,background:'#111',color:'#fff',border:'none',fontSize:16,fontWeight:700}}>{loading?'...':'Confirm Ride'}</button>
       </div>
     </div>
   )
