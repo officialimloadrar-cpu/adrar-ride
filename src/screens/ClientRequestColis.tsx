@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getT } from '../lib/translations'
+import { calcColisInside, calcColisCar, calcColisMoto } from '../lib/pricingEngine'
 export default function ClientRequestColis({lang}:{lang:string}){
   const t=getT(lang)
   const [o,setO]=useState('')
   const [d,setD]=useState('')
+  const [km,setKm]=useState(8)
+  const [kg,setKg]=useState(3)
   const [ok,setOk]=useState(false)
+  const price=km<=10?calcColisInside(kg,30):(kg<=15 && km<=17?calcColisMoto(km):calcColisCar(km))
   const send=async()=>{
-    await supabase.from('colis_orders').insert([{origin:o,dest:d,status:'pending'}])
+    await supabase.from('colis_orders').insert([{origin:o,dest:d,weight:kg,distance:km,price:price,status:'pending'}])
     setOk(true)
   }
   if(ok) return <div dir={lang==='ar'?'rtl':'ltr'} style={{padding:80,textAlign:'center',fontWeight:900}}>✓ {t.sendParcel}</div>
@@ -17,9 +21,13 @@ export default function ClientRequestColis({lang}:{lang:string}){
       <div style={{display:'grid',gap:12,marginTop:24}}>
         <input value={o} onChange={e=>setO(e.target.value)} placeholder={t.from} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
         <input value={d} onChange={e=>setD(e.target.value)} placeholder={t.to} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
+        <div style={{display:'flex',gap:8}}>
+          <input type="number" value={km} onChange={e=>setKm(Number(e.target.value))} placeholder="km" style={{flex:1,padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
+          <input type="number" value={kg} onChange={e=>setKg(Number(e.target.value))} placeholder="kg" style={{flex:1,padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/>
+        </div>
         <div style={{padding:20,borderRadius:16,background:'#111',color:'#fff',display:'flex',justifyContent:'space-between'}}>
           <span style={{opacity:.6}}>{t.total}</span>
-          <span style={{fontWeight:800,fontSize:24}}>{t.fmtPrice(400)}</span>
+          <span style={{fontWeight:800,fontSize:24}}>{t.fmtPrice(price)}</span>
         </div>
         <button onClick={send} style={{padding:16,borderRadius:14,background:'#111',color:'#fff',border:'none',fontWeight:700}}>{t.sendParcel}</button>
       </div>
