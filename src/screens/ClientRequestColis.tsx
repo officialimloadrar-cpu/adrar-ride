@@ -1,12 +1,8 @@
-
-import { useState, useMemo } from 'react'
-import { calculateRide } from '@/services/pricingEngine'
-import PriceCard from '@/components/PriceCard'
-import { createOrder } from '@/services/orders'
-export default function RequestParcel(){
-  const [dist,setDist]=useState(8)
-  const [weight,setWeight]=useState(6)
-  const quote=useMemo(()=>calculateRide({ distanceKm:dist, mode:'parcel', weightKg:weight }),[dist,weight])
-  const send=async()=>{ try{ await createOrder({ type:'colis', mode:'parcel', distance_km:dist, weight_kg:weight, price:quote.total, status:'pending' }); alert(`Parcel ${quote.total} ${quote.currency}`)}catch(e:any){ alert(e.message) } }
-  return <div className="grid grid-2"><div className="card" style={{padding:20}}><h2>Parcel</h2><label>Distance km<input className="input" type="number" value={dist} onChange={e=>setDist(Number(e.target.value))}/></label><label>Weight kg<input className="input" type="number" value={weight} onChange={e=>setWeight(Number(e.target.value))}/></label><button className="btn btn-lg" style={{marginTop:12}} onClick={send}>Send Parcel</button></div><PriceCard q={quote}/></div>
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+export default function ClientRequestColis(){
+  const [o,setO]=useState('أدرار - وسط'); const [d,setD]=useState('تيميمون'); const [load,setLoad]=useState(false); const [ok,setOk]=useState(false)
+  const send=async()=>{ setLoad(true); await supabase.from('colis_orders').insert([{origin:o,dest:d,status:'pending'}]); setLoad(false); setOk(true) }
+  if(ok) return <div style={{padding:80,textAlign:'center',fontWeight:900,fontSize:22}}>تم إرسال الطرد ✓</div>
+  return (<div style={{maxWidth:440,margin:'0 auto',padding:'32px 20px'}}><h2 style={{fontSize:30,fontWeight:900,letterSpacing:-1.5}}>Colis</h2><div style={{display:'grid',gap:12,marginTop:24}}><input value={o} onChange={e=>setO(e.target.value)} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/><input value={d} onChange={e=>setD(e.target.value)} style={{padding:16,borderRadius:14,border:'1px solid #e5e7eb'}}/><div style={{padding:20,borderRadius:16,background:'#111',color:'#fff',display:'flex',justifyContent:'space-between'}}><span style={{opacity:.6}}>Total</span><span style={{fontWeight:800,fontSize:24}}>DZD 500</span></div><button onClick={send} disabled={load} style={{padding:16,borderRadius:14,background:'#111',color:'#fff',border:'none',fontWeight:700}}>{load?'...':'Confirm Colis'}</button></div></div>)
 }
